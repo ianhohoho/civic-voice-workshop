@@ -12,6 +12,11 @@ export function CitizenPage({ user }) {
     event.preventDefault();
     setError("");
 
+    if (!message.trim()) {
+      setError("Please enter feedback.");
+      return;
+    }
+
     if (message.length > FEEDBACK_CHARACTER_LIMIT) {
       setError(`Feedback must be ${FEEDBACK_CHARACTER_LIMIT} characters or fewer.`);
       return;
