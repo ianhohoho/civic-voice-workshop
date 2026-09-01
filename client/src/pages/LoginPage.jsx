@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { login } from "../api";
+import { isValidWorkshopId, normalizeWorkshopId } from "../lib/workshopId";
 
 export function LoginPage({ onLogin }) {
   const [role, setRole] = useState("citizen");
@@ -10,10 +11,16 @@ export function LoginPage({ onLogin }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setBusy(true);
     setError("");
+    if (!isValidWorkshopId(nric)) {
+      setError("Enter a valid workshop ID, such as S0000001A.");
+      return;
+    }
+
+    const normalizedNric = normalizeWorkshopId(nric);
+    setBusy(true);
     try {
-      const session = await login({ nric, password, role });
+      const session = await login({ nric: normalizedNric, password, role });
       onLogin(session);
     } catch (requestError) {
       setError(requestError.message);
@@ -44,7 +51,7 @@ export function LoginPage({ onLogin }) {
           </div>
           <form onSubmit={handleSubmit}>
             <label>NRIC
-              <input value={nric} onChange={(event) => setNric(event.target.value)} placeholder="e.g. S0000001A" />
+              <input value={nric} onChange={(event) => setNric(event.target.value)} placeholder="e.g. S0000001A" aria-invalid={Boolean(error)} />
             </label>
             <label>Password
               <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" />
