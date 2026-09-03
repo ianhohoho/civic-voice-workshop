@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { AdminFeedbackPanel } from "./AdminPage";
+import { AdminFeedbackPanel, filterFeedback } from "./AdminPage";
 
 function renderPanel(props) {
   return renderToStaticMarkup(createElement(AdminFeedbackPanel, {
@@ -9,6 +9,7 @@ function renderPanel(props) {
     error: "",
     feedback: [],
     onRetry: () => {},
+    onClearFilters: () => {},
     ...props,
   }));
 }
@@ -36,12 +37,38 @@ describe("admin feedback states", () => {
         id: "feedback-1",
         name: "Aisha Rahman",
         message: "Please add more benches.",
+        category: "Estate",
         status: "New",
         createdAt: "2026-08-30T09:00:00.000Z",
       }],
     });
 
     expect(markup).toContain("Please add more benches.");
+    expect(markup).toContain("Estate");
     expect(markup).toContain("1 items");
+  });
+
+  it("shows a useful empty state when filters have no matches", () => {
+    const markup = renderPanel({ filtersActive: true, totalCount: 2 });
+
+    expect(markup).toContain("No matching feedback");
+    expect(markup).toContain("Clear filters");
+    expect(markup).toContain("0 of 2 items");
+  });
+});
+
+describe("admin feedback filters", () => {
+  const feedback = [
+    { id: "1", category: "Estate", status: "New" },
+    { id: "2", category: "Estate", status: "Closed" },
+    { id: "3", category: "Transport", status: "New" },
+  ];
+
+  it("combines category and status filters", () => {
+    expect(filterFeedback(feedback, "Estate", "New").map((item) => item.id)).toEqual(["1"]);
+  });
+
+  it("returns all feedback when filters are clear", () => {
+    expect(filterFeedback(feedback, "", "")).toEqual(feedback);
   });
 });

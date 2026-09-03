@@ -25,10 +25,11 @@ describe("CivicVoice baseline API", () => {
   it("accepts feedback", async () => {
     const app = await testApp();
     const response = await request(app).post("/api/feedback").send({
-      nric: "S0000001A", name: "Aisha Rahman", message: "Please add more benches.",
+      nric: "S0000001A", name: "Aisha Rahman", message: "Please add more benches.", category: "Estate",
     });
     expect(response.status).toBe(201);
     expect(response.body.feedback.message).toBe("Please add more benches.");
+    expect(response.body.feedback.category).toBe("Estate");
   });
 
   it.each([
@@ -38,10 +39,20 @@ describe("CivicVoice baseline API", () => {
   ])("rejects %s feedback", async (_description, message) => {
     const app = await testApp();
     const response = await request(app).post("/api/feedback").send({
-      nric: "S0000001A", name: "Aisha Rahman", message,
+      nric: "S0000001A", name: "Aisha Rahman", message, category: "Estate",
     });
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("Please enter feedback.");
+  });
+
+  it.each([undefined, "General", "Housing"])('rejects invalid category "%s"', async (category) => {
+    const app = await testApp();
+    const response = await request(app).post("/api/feedback").send({
+      nric: "S0000001A", name: "Aisha Rahman", message: "Please add more benches.", category,
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Please choose a valid feedback category.");
   });
 
   it("blocks the feedback list without the admin role header", async () => {
