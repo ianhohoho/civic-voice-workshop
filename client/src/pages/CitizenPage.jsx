@@ -3,6 +3,7 @@ import { submitFeedback } from "../api";
 import { submissionReference } from "../lib/submissionReference";
 
 const FEEDBACK_CHARACTER_LIMIT = 500;
+const FEEDBACK_CATEGORIES = ["Estate", "Transport", "Environment", "Other"];
 
 export function SubmissionConfirmation({ reference, onSubmitAnother }) {
   return (
@@ -17,6 +18,7 @@ export function SubmissionConfirmation({ reference, onSubmitAnother }) {
 
 export function CitizenPage({ user }) {
   const [message, setMessage] = useState("");
+  const [category, setCategory] = useState(FEEDBACK_CATEGORIES[0]);
   const [reference, setReference] = useState("");
   const [error, setError] = useState("");
 
@@ -35,9 +37,10 @@ export function CitizenPage({ user }) {
     }
 
     try {
-      const response = await submitFeedback({ nric: user.nric, name: user.name, message });
+      const response = await submitFeedback({ nric: user.nric, name: user.name, message, category });
       setReference(submissionReference(response.feedback.id));
       setMessage("");
+      setCategory(FEEDBACK_CATEGORIES[0]);
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -55,6 +58,11 @@ export function CitizenPage({ user }) {
           <SubmissionConfirmation reference={reference} onSubmitAnother={() => setReference("")} />
         ) : (
           <form onSubmit={handleSubmit}>
+            <label>Category
+              <select value={category} onChange={(event) => setCategory(event.target.value)}>
+                {FEEDBACK_CATEGORIES.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
             <label>Your feedback
               <textarea
                 rows="7"
